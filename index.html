@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Banking App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 500px;
+      margin: 40px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input, button, select {
+      width: 100%;
+      padding: 10px;
+      margin: 6px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .hidden {
+      display: none;
+    }
+    .balance {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin: 10px 0;
+      text-align: center;
+      color: #333;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      background: #f9f9f9;
+      margin: 4px 0;
+      padding: 8px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Banking Application</h2>
+
+    <!-- Registration/Login Section -->
+    <div id="authSection">
+      <input type="text" id="username" placeholder="Enter your name">
+      <button onclick="register()">Register</button>
+      <button onclick="login()">Login</button>
+    </div>
+
+    <!-- Banking Section -->
+    <div id="bankSection" class="hidden">
+      <p class="balance">Balance: ₹<span id="balance">0</span></p>
+
+      <h3>Deposit</h3>
+      <input type="number" id="depositAmount" placeholder="Enter amount">
+      <button onclick="deposit()">Deposit</button>
+
+      <h3>Withdraw</h3>
+      <input type="number" id="withdrawAmount" placeholder="Enter amount">
+      <button onclick="withdraw()">Withdraw</button>
+
+      <h3>Transfer</h3>
+      <input type="text" id="toUser" placeholder="To user">
+      <input type="number" id="transferAmount" placeholder="Enter amount">
+      <button onclick="transfer()">Transfer</button>
+
+      <h3>Transactions</h3>
+      <ul id="transactions"></ul>
+
+      <button style="background:#f44336" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <script>
+    let users = {};  // stores all users {username: {balance, transactions}}
+    let currentUser = null;
+
+    function register() {
+      const name = document.getElementById("username").value.trim();
+      if (!name) {
+        alert("Enter your name!");
+        return;
+      }
+      if (users[name]) {
+        alert("User already exists! Please login.");
+        return;
+      }
+      users[name] = { balance: 0, transactions: [] };
+      alert("Registered successfully. Please login.");
+    }
+
+    function login() {
+      const name = document.getElementById("username").value.trim();
+      if (!users[name]) {
+        alert("User not found! Please register first.");
+        return;
+      }
+      currentUser = name;
+      document.getElementById("authSection").classList.add("hidden");
+      document.getElementById("bankSection").classList.remove("hidden");
+      updateUI();
+    }
+
+    function logout() {
+      currentUser = null;
+      document.getElementById("authSection").classList.remove("hidden");
+      document.getElementById("bankSection").classList.add("hidden");
+    }
+
+    function updateUI() {
+      if (!currentUser) return;
+      document.getElementById("balance").textContent = users[currentUser].balance.toFixed(2);
+      let txList = document.getElementById("transactions");
+      txList.innerHTML = "";
+      users[currentUser].transactions.forEach(t => {
+        let li = document.createElement("li");
+        li.textContent = t;
+        txList.appendChild(li);
+      });
+    }
+
+    function deposit() {
+      const amount = parseFloat(document.getElementById("depositAmount").value);
+      if (isNaN(amount) || amount <= 0) return alert("Invalid amount");
+      users[currentUser].balance += amount;
+      users[currentUser].transactions.unshift(`Deposited ₹${amount}`);
+      updateUI();
+    }
+
+    function withdraw() {
+      const amount = parseFloat(document.getElementById("withdrawAmount").value);
+      if (isNaN(amount) || amount <= 0) return alert("Invalid amount");
+      if (amount > users[currentUser].balance) return alert("Insufficient balance");
+      users[currentUser].balance -= amount;
+      users[currentUser].transactions.unshift(`Withdrew ₹${amount}`);
+      updateUI();
+    }
+
+    function transfer() {
+      const toUser = document.getElementById("toUser").value.trim();
+      const amount = parseFloat(document.getElementById("transferAmount").value);
+      if (!toUser || isNaN(amount) || amount <= 0) return alert("Invalid input");
+      if (!users[toUser]) return alert("Recipient does not exist");
+      if (amount > users[currentUser].balance) return alert("Insufficient balance");
+
+      users[currentUser].balance -= amount;
+      users[toUser].balance += amount;
+      users[currentUser].transactions.unshift(`Transferred ₹${amount} to ${toUser}`);
+      users[toUser].transactions.unshift(`Received ₹${amount} from ${currentUser}`);
+      updateUI();
+    }
+  </script>
+</body>
+</html>
